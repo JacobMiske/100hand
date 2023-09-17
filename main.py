@@ -186,6 +186,7 @@ def main():
     deck_of_cards_remaining = deck
     print(deck)
     for count, i in enumerate(range(int(number_of_hands)-1), 0):
+        print(len(deck.cards))
         new_cards_for_ith_hand = terminal_playing_cards.View([random.choice(deck) for _ in range(cards_to_add)])
         # pull new cards from deck_of_cards_remaining for each new hand
         shorthand_cards_for_ith_hand = get_simple_hand_data_structure(terminal_cards_hand=new_cards_for_ith_hand)
