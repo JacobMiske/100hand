@@ -86,6 +86,122 @@ def test_function_score_hand():
     return True
 
 
+def user_gameplay():
+    # Play 100 hand manually with some starter credit
+    # First, show player's hand
+
+    credit = 1000
+
+    while credit > 0:
+        # Each hand uses a new deck
+        deck = terminal_playing_cards.Deck()
+        deck.shuffle()
+        player_hand = terminal_playing_cards.View([deck.pop() for _ in range(5)])
+        player_cards = player_hand.cards
+
+        credit_from_round = 0
+        # Player operated game, one set of hands at a time
+        bet = input("What is your per hand bet? (1 to 5 cents inclusive)")
+        # print one hand for user
+        number_of_hands = input("How many hands are played at once? (1 to 100 inclusive)")
+        input_cost = int(bet) * int(number_of_hands)
+        print(player_hand)
+        held_cards = input(
+            "Cards 1 thru 5 are shown, list which cards should be held with commas between each (e.g. 1, 3, 4)")
+        held_cards_index = [int(i) for i in held_cards.split(",")]
+        return_cards_index = [int(i) for i in [1,2,3,4,5] if i not in held_cards_index]
+        print(return_cards_index)
+        # how many cards to add after cut?
+        cards_to_add = 5 - len(held_cards_index)
+        # create new hand with remaining cards and new ones
+        cards_to_hold = []
+        cards_to_return = []
+        for i in held_cards_index:
+            cards_to_hold.append(player_cards[i - 1])
+        for i in return_cards_index:
+            cards_to_return.append(player_cards[i - 1])
+        print(cards_to_return)
+        for card in cards_to_return:
+            # insert cards to return (not held) back into the deck at zero index, one at a time
+            #TODO: test case should verify that deck.cards length is equal to 52-len(cards_to_hold)
+            deck.cards.insert(0, card)
+        # Generate object to save held cards for later use in many hands
+        print('CARD(S) TO hold')
+        print(cards_to_hold)
+        # Adjusts held cards to shorthand style
+        test_cards = []
+        for i in cards_to_hold:
+            suit_dict = {'spades': 'S', 'diamonds': 'D', 'hearts': 'H', 'clubs': 'C'}
+            print(vars(i))
+            if i._face == "10":
+                face = "T"
+            else:
+                face = i._face
+            shorthand_card = str(face) + str(suit_dict[i._suit])
+            print(shorthand_card)
+            test_cards.append(shorthand_card)
+        #TODO: need to readd the cards burned back into the deck
+
+        # Add new cards to saved cards to make new hand
+        player_hand.cards = cards_to_hold
+        print(player_hand)
+        held_cards_hand = player_hand
+        # deal in new cards after another shuffle
+        deck.shuffle()
+        new_cards = terminal_playing_cards.View([deck[i] for i in range(cards_to_add)])
+        print(new_cards)
+        for card in new_cards.cards:
+            player_hand.cards.append(card)
+        player_hand._max = 5
+        # This is the hand to score!
+        print(player_hand)
+        # Convert complex form of cards to simple form for quick processing
+        shorthand_player_hand = get_simple_hand_data_structure(terminal_cards_hand=player_hand)
+        # print(shorthand_player_hand)
+        result = score_hand(player_hand=shorthand_player_hand)
+        print(result)
+        # Score points for the first hand pulled before scoring the other 99 or so
+        points = get_points_from_score(res=result, b=int(bet))
+        print('Points from first hand: ')
+        print(points)
+        credit += points
+        credit_from_round += points
+
+        print('Cards originally held')
+        print(test_cards)
+
+        # test_function_score_hand()
+
+        # Generate X other hands with held cards in 'player_hand' and score those
+        multitude_of_hands = []
+        deck_of_cards_remaining = deck
+        print(len(deck.cards))
+        for count, i in enumerate(range(int(number_of_hands) - 1), 0):
+            print(len(deck.cards))
+            new_cards_for_ith_hand = terminal_playing_cards.View([random.choice(deck) for _ in range(cards_to_add)])
+            # pull new cards from deck_of_cards_remaining for each new hand
+            shorthand_cards_for_ith_hand = get_simple_hand_data_structure(terminal_cards_hand=new_cards_for_ith_hand)
+            # print(shorthand_cards_for_ith_hand)
+            ith_hand = test_cards + shorthand_cards_for_ith_hand
+            multitude_of_hands.append(ith_hand)
+        print(multitude_of_hands)
+
+        for hand in multitude_of_hands:
+            combo = score_hand(player_hand=hand)
+            points_from_hand = get_points_from_score(res=combo, b=int(bet))
+            #print('Combo made: {}'.format(combo))
+            #print('Points from combo: {}'.format(points_from_hand))
+            # Adjust total credit and determine total credit from this round
+            credit += points_from_hand
+            credit_from_round += points_from_hand
+        # Print out situation after round to player
+        print('Credit from round: {}'.format(credit_from_round))
+        print('Input cost: {}'.format(input_cost))
+        print('Credit (cents):')
+        print(credit - input_cost)
+    return 0
+
+
 def play_hand_hold_highest_card(player_hand):
     # Given a hand, will return list of one integer 'held_cards_index' for highest card
     # First, need to find highest value card and get index
@@ -113,97 +229,13 @@ def play_hand_hold_highest_value_combination(players_hand):
 def main():
     # 100 hand poker game
     print("This is a 100 hand poker game simulator")
-
     total_score = 0
-    # First, show player's hand
-    deck = terminal_playing_cards.Deck()
-    deck.shuffle()
-    player_hand = terminal_playing_cards.View([deck.pop() for _ in range(5)])
 
-    player_cards = player_hand.cards
-
-
-    # Player operated game, one set of hands at a time
-    bet = input("What is your per hand bet? (1 to 5 cents inclusive)")
-    # print one hand for user
-    number_of_hands = input("How many hands are played at once? (1 to 100 inclusive)")
-    input_cost = int(bet) * int(number_of_hands)
-    print(player_hand)
-    held_cards = input(
-        "Cards 1 thru 5 are shown, list which cards should be held with commas between each (e.g. 1, 3, 4)")
-    held_cards_index = [int(i) for i in held_cards.split(",")]
-    # how many cards to add after cut?
-    cards_to_add = 5 - len(held_cards_index)
-    # create new hand with remaining cards and new ones
-    cards_to_save = []
-    for i in held_cards_index:
-        cards_to_save.append(player_cards[i - 1])
-    # Generate object to save held cards for later use in many hands
-    print('CARD(S) TO SAVE')
-    print(cards_to_save)
-    test_cards = []
-    for i in cards_to_save:
-        suit_dict = {'spades': 'S', 'diamonds': 'D', 'hearts': 'H', 'clubs': 'C'}
-        print(vars(i))
-        if i._face == "10":
-            face = "T"
-        else:
-            face = i._face
-        shorthand_card = str(face) + str(suit_dict[i._suit])
-        print(shorthand_card)
-        test_cards.append(shorthand_card)
-
-    # Add new cards to saved cards to make new hand
-    player_hand.cards = cards_to_save
-    print(player_hand)
-    held_cards_hand = player_hand
-    # deal in new cards
-    new_cards = terminal_playing_cards.View([deck.pop() for _ in range(cards_to_add)])
-    print(new_cards)
-    for card in new_cards.cards:
-        player_hand.cards.append(card)
-    player_hand._max = 5
-    # This is the hand to score!
-    print(player_hand)
-    # Convert complex form of cards to simple form for quick processing
-    shorthand_player_hand = get_simple_hand_data_structure(terminal_cards_hand=player_hand)
-    print(shorthand_player_hand)
-    result = score_hand(player_hand=shorthand_player_hand)
-    print(result)
-    # Score points for the first hand pulled before scoring the other 99 or so
-    points = get_points_from_score(res=result, b=int(bet))
-    print('Points from first hand: ')
-    print(points)
-    total_score += points
-
-    print('Cards originally held')
-    print(test_cards)
-
-    # test_function_score_hand()
-
-    # Generate X other hands with held cards in 'player_hand' and score those
-    multitude_of_hands = []
-    deck_of_cards_remaining = deck
-    print(deck)
-    for count, i in enumerate(range(int(number_of_hands)-1), 0):
-        print(len(deck.cards))
-        new_cards_for_ith_hand = terminal_playing_cards.View([random.choice(deck) for _ in range(cards_to_add)])
-        # pull new cards from deck_of_cards_remaining for each new hand
-        shorthand_cards_for_ith_hand = get_simple_hand_data_structure(terminal_cards_hand=new_cards_for_ith_hand)
-        # print(shorthand_cards_for_ith_hand)
-        ith_hand = test_cards + shorthand_cards_for_ith_hand
-        multitude_of_hands.append(ith_hand)
-    print(multitude_of_hands)
-
-    for hand in multitude_of_hands:
-        combo = score_hand(player_hand=hand)
-        points_from_hand = get_points_from_score(res=combo, b=int(bet))
-        print('Combo made: {}'.format(combo))
-        print('Points from combo: {}'.format(points_from_hand))
-        total_score += points_from_hand
-
-    print('Money Made:')
-    print(total_score - input_cost)
+    play_options = input("Would you like to play 100 hand or simulate gameplay? [0 for play, 1 for simulate]")
+    if play_options == '0':
+        user_gameplay()
+    if play_options == '1':
+        print('simulator not ready yet')
 
 
 if __name__ == '__main__':
