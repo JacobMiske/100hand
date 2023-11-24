@@ -127,7 +127,7 @@ def score_hand(player_hand):
     # TODO: Implement highest card, not needed initially for '100 hand' poker, doesn't score any points
 
     # Next, check if there are pairs
-    one_pair, one_pair_index_list = check_one_pairs(hand=player_hand)
+    one_pair = check_one_pairs(hand=player_hand)
     two_pair = check_two_pairs(hand=player_hand)
     # Next, three or four of a kind
     three_kind = check_three_of_a_kind(hand=player_hand)
