@@ -94,6 +94,8 @@ def check_two_pairs(hand):
 
 def check_one_pairs(hand):
     # Uniquely, in 100 hand, only pairs of Jacks or Better will score, otherwise doesn't count as a pair
+    # returns boolean as well as list of card index for the pair
+    one_pair_indices = []
     values = [i[0] for i in hand]
     value_counts = defaultdict(lambda: 0)
     rank_values = [card_order_dict[i] for i in values]
@@ -102,10 +104,15 @@ def check_one_pairs(hand):
     if 2 in value_counts.values():
         # If the mode of the one_pair combo is greater than 10 'T', then it's Jacks or Better
         mode = max(set(rank_values), key=rank_values.count)
-        if int(mode) > 10:
-            return True
+        one_pair_value = int(mode)
+
+        if one_pair_value > 10:
+            for i, count in enumerate(rank_values, 0):
+                if i == one_pair_value:
+                    one_pair_indices.append(int(count))
+            return True, one_pair_indices
     else:
-        return False
+        return False, one_pair_indices
 
 
 def score_hand(player_hand):
@@ -120,7 +127,7 @@ def score_hand(player_hand):
     # TODO: Implement highest card, not needed initially for '100 hand' poker, doesn't score any points
 
     # Next, check if there are pairs
-    one_pair = check_one_pairs(hand=player_hand)
+    one_pair, one_pair_index_list = check_one_pairs(hand=player_hand)
     two_pair = check_two_pairs(hand=player_hand)
     # Next, three or four of a kind
     three_kind = check_three_of_a_kind(hand=player_hand)
